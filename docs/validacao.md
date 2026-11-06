@@ -12,7 +12,8 @@ Responsável: Codex `/root`. Fonte de requisitos: spec DOCX v1 fornecida por JV 
 - Navegador real: encerramento humano com justificativa → `CLOSED`, ação auditada separadamente; caso “não funciona” → revisão, sem prioridade e sem issue. Remoção da política de outros → versão 2 inativa; edição/reativação → versão 3 ativa.
 - `ops/provision_database.py` ensaiado na instância PostgreSQL descartável local com comandos Docker redirecionados para os binários locais: criação de banco/role, ACL, login, arquivo privado modo 600 e dump inicial confirmados. Nenhum banco da VPS foi criado por esse ensaio.
 - Hermes: `kipper-triagem` criado no Mac e no dashboard da VPS, sem clone e sem skills. O perfil remoto permaneceu parado, sem vincular canal de outro projeto.
-- VPS: após aprovação explícita de JV em 06/11/2026, `triagem_java` criado no cluster existente com role exclusiva e login confirmado. Consulta independente verificou owner, ausência de privilégios administrativos/memberships, bloqueio de acesso ao PulsePay e zero outras roles de aplicação com CONNECT ao banco novo. Credencial e dump inicial estão privados no servidor (root:600), sem senha impressa. PostgreSQL de PulsePay e Rachô permaneceram saudáveis. O banco novo está vazio, com zero tabelas de aplicação; migrações operacionais ainda não foram executadas. [Recibo sem segredos](banco-vps-verificacao.json).
+- VPS: após aprovação explícita de JV em 06/11/2026, `triagem_java` criado no cluster existente com role exclusiva e login confirmado. Consulta independente verificou owner, ausência de privilégios administrativos/memberships, bloqueio de acesso ao PulsePay e zero outras roles de aplicação com CONNECT ao banco novo. Credencial e dump inicial estão privados no servidor (root:600), sem senha impressa. [Recibo histórico da criação](banco-vps-verificacao.json).
+- Conexão operacional: após pedido de JV, backend instalado como serviço privado `kipper-triagem.service` em 127.0.0.1:18080. Flyway V1/V2/V3 confirmadas com sucesso; sete tabelas da aplicação, histórico Flyway e três políticas ativas. Consulta PostgreSQL confirmou conexões da role `triagem_java`; API de políticas respondeu pela VPS e por túnel SSH. Serviço ativo/habilitado, sem reinícios na conferência, executado com DynamicUser. Dump pré-migração criado e reconhecido, credencial mantida no servidor. PostgreSQL PulsePay/Rachô continuaram healthy. [Recibo da conexão e migrações](backend-vps-verificacao.json).
 
 Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suíte foi repetida nos dois motores. Os testes HTTP usam servidor local, não substituem chamada real a um provedor ou GitHub.
 
@@ -32,13 +33,13 @@ Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suít
 | Trocar integração sem trocar regra | Interfaces AiModel/IssueGateway; modos demo e real, substituições nos testes. |
 | Painel por equipe, políticas e conflitos | Implementado; principais fluxos exercitados no navegador. |
 | Evento WhatsApp real → IA real → issue real | **Pendente de configuração e demonstração externa.** |
-| Banco na VPS | **Criado e verificado**, com login exclusivo e isolamento lógico. Conectar a aplicação e executar Flyway ainda são etapas pendentes. |
-| Backup/restauração operacional | Dump inicial criado e formato legível por pg_restore confirmado; **rotina e restauração pendentes**. |
+| Banco na VPS | **Backend conectado e Flyway V1–V3 aplicadas**, com role exclusiva, serviço privado e catálogo inicial verificados. |
+| Backup/restauração operacional | Dumps inicial e pré-migração criados e legíveis por pg_restore; **rotina e restauração pendentes**. |
 | Aula, prazo, vídeo e acesso da mentora | **Pendentes de confirmação/entrega**. |
 
 ## Próximos passos externos
 
-1. Conectar o backend ao banco criado usando a credencial privada do servidor e executar as migrações; definir rotina de backup e testar restauração.
+1. Definir rotina de backup e testar restauração do banco já conectado e migrado.
 2. Configurar provedor/modelo compatível com tool calling e segredo no ambiente privado do backend.
 3. Confirmar o repositório de teste para issues e token restrito.
 4. Instalar a ponte no host que alcança o backend e escolher/vincular conversa ou grupo WhatsApp fictício ao perfil dedicado.

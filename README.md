@@ -50,6 +50,8 @@ export DATABASE_USER='triagem_java'
 
 Esse Compose cria uma instância local, não provisiona a VPS. Na Hostinger, usar banco e role próprios com privilégios restritos, sem abrir porta pública. Confira backup e restauração antes de guardar dados importantes. [Preparação da VPS](docs/infraestrutura.md).
 
+Na VPS de JV, o backend já está conectado a `triagem_java`: serviço privado em **127.0.0.1:18080**, Flyway V1–V3 aplicadas e três políticas iniciais verificadas. Acesso por túnel SSH em [localhost:18080](http://localhost:18080); IA e encaminhamento continuam em demonstração. [Estado e operação](docs/infraestrutura.md#backend-privado-na-vps--conectado-em-06112026).
+
 O Spring lê as variáveis do processo; **não carrega `.env` automaticamente**. `.env.example` documenta os nomes. Nunca versione `.env`, chaves ou senhas. Um arquivo privado pode ser carregado pelo serviço/shell conforme o ambiente. A troca do H2 para PostgreSQL não copia dados existentes.
 
 ## IA e GitHub reais
