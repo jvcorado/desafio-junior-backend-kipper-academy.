@@ -1,0 +1,40 @@
+{
+  "verifiedDate": "2026-11-06",
+  "responsibleAgent": "Codex /root",
+  "authorization": "Aprovação explícita de JV ao plano de banco, usuário exclusivo e credencial privada neste chat",
+  "scriptCommit": "8d906016ff1a1ab79316f42376bd808963f0e3be",
+  "scriptSha256": "ea23e467d1e9b803e4504bbb78512b00c90523c633d68d786f22a52a4656b765",
+  "database": "triagem_java",
+  "owner": "triagem_java",
+  "loginVerified": true,
+  "role": {
+    "login": true,
+    "superuser": false,
+    "createDatabase": false,
+    "createRole": false,
+    "replication": false,
+    "bypassRowLevelSecurity": false,
+    "memberships": 0
+  },
+  "otherNonSuperuserLoginRolesWithConnect": 0,
+  "canConnectToPulsePay": false,
+  "credentialStoredOnlyOnVps": true,
+  "credentialFileOwner": "root:root",
+  "credentialFileMode": "600",
+  "newPublicPorts": 0,
+  "existingPostgresqlHealth": {
+    "pulsepay": "healthy",
+    "racho": "healthy"
+  },
+  "applicationTables": 0,
+  "initialBackupCreated": true,
+  "initialBackupOwner": "root:root",
+  "initialBackupMode": "600",
+  "initialBackupArchiveReadable": true,
+  "restoreTested": false,
+  "recurringBackupVerified": false,
+  "pending": [
+    "Conectar backend ao banco e executar Flyway",
+    "Definir cobertura recorrente de backup e testar restauração"
+  ]
+}

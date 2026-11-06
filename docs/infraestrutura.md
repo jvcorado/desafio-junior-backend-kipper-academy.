@@ -15,7 +15,7 @@ O script verifica login e produz dump inicial privado em `/var/backups/kipper-tr
 
 Em falha parcial, o arquivo privado impede execução cega/recriação/rotação. Inspecione o estado antes de corrigir; não remova o marcador só para repetir o script. Nenhum script altera firewall, configuração global de SSH ou permissões dos bancos existentes.
 
-O script foi preparado para revisão e a criação na VPS só pode ser declarada após verificação real. Veja o registro atual em `validacao.md`.
+Executado na VPS em 06/11/2026 após aprovação explícita de JV. Banco e role `triagem_java` criados, login confirmado e isolamento conferido por consulta independente. Credencial e dump inicial privados (root:600); bancos existentes saudáveis. O dump foi reconhecido por `pg_restore --list`; restauração e cobertura recorrente ainda não foram verificadas. O banco está vazio, sem migrações de aplicação executadas. Veja `banco-vps-verificacao.json` e o registro em `validacao.md`.
 
 ## Execução da aplicação
 
