@@ -38,7 +38,7 @@ class FlowIntegrationTest {
         String testUrl=System.getenv("TEST_DATABASE_URL");
         if(testUrl!=null && !testUrl.matches("jdbc:postgresql://[^/]+/[A-Za-z0-9_-]+_test(?:\\?.*)?"))
             throw new IllegalStateException("Use exclusivamente banco PostgreSQL descartável com nome terminado em _test");
-        for(String table:List.of("conflicts","inbound_events","analyses","delivery_attempts","ticket_actions","tickets")) store.jdbc().update("DELETE FROM "+table);
+        for(String table:List.of("conflicts","inbound_events","analyses","delivery_attempts","ticket_actions","kanban_handoffs","tickets")) store.jdbc().update("DELETE FROM "+table);
         store.jdbc().update("UPDATE policies SET active=TRUE,version=1");
         DemoAiModel demo=new DemoAiModel(json,store);
         when(model.name()).thenReturn("demo");
@@ -129,6 +129,16 @@ class FlowIntegrationTest {
         assertThat(analysis.get("tool_trace").toString()).contains("consult_policy","BILLING");
         verify(gateway,times(1)).create(any());
         assertThatThrownBy(()->triage.process(t.id())).isInstanceOf(DomainException.class);
+    }
+    @Test void internalKanbanHasOneDurableConfirmationForRepeatedDispatch() {
+        var t=run("Fui cobrado duas vezes pela mesma compra.");
+        var panel=new PanelIssueGateway(store);
+        var first=panel.create(t);
+        var repeated=panel.create(t);
+        assertThat(first.outcome()).isEqualTo(IssueGateway.Outcome.CONFIRMED);
+        assertThat(repeated.externalId()).isEqualTo(first.externalId());
+        assertThat(panel.find(t).url()).isEqualTo("/?ticket="+t.id());
+        assertThat(store.jdbc().queryForObject("SELECT COUNT(*) FROM kanban_handoffs WHERE ticket_id=?",Integer.class,t.id())).isEqualTo(1);
     }
     @Test void technicalPriorityDistinguishesImpeditiveAndMinor() {
         var high=run("O produto está indisponível e não consigo usar o produto.");

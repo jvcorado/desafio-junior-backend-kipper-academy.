@@ -1,0 +1,8 @@
+CREATE TABLE kanban_handoffs (
+ id VARCHAR(36) PRIMARY KEY,
+ ticket_id VARCHAR(36) NOT NULL UNIQUE REFERENCES tickets(id),
+ team VARCHAR(20) NOT NULL,
+ category VARCHAR(20) NOT NULL,
+ priority VARCHAR(20) NOT NULL,
+ created_at VARCHAR(40) NOT NULL
+);

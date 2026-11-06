@@ -1,0 +1,70 @@
+{
+  "verifiedAt": "2026-11-06",
+  "environment": "VPS / PostgreSQL triagem_java",
+  "ai": "Hermes CodexAuxiliaryClient / openai-codex / gpt-6.1-sol",
+  "javaAiAdapter": "http",
+  "deliveryAdapter": "panel",
+  "whatsappEndToEndVerified": false,
+  "cases": [
+    {
+      "case": "billing",
+      "passed": true,
+      "ticketId": "d8797c08-7380-4e82-9f47-cc480b4a06ea",
+      "source": "ai-acceptance",
+      "status": "FORWARDED",
+      "team": "FINANCE",
+      "priority": "NORMAL",
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 1
+    },
+    {
+      "case": "technical-high",
+      "passed": true,
+      "ticketId": "ea025777-d399-4292-bb1c-88ccc4dd708e",
+      "source": "ai-acceptance",
+      "status": "FORWARDED",
+      "team": "TECHNICAL",
+      "priority": "HIGH",
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 1
+    },
+    {
+      "case": "technical-normal",
+      "passed": true,
+      "ticketId": "447c8c28-898f-4f76-84ed-707c462a783a",
+      "source": "ai-acceptance",
+      "status": "FORWARDED",
+      "team": "TECHNICAL",
+      "priority": "NORMAL",
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 1
+    },
+    {
+      "case": "insufficient",
+      "passed": true,
+      "ticketId": "1e5a0d7c-986a-414a-9b3b-f0c046d14228",
+      "source": "ai-acceptance",
+      "status": "REVIEW",
+      "team": "REVIEW",
+      "priority": null,
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 0
+    },
+    {
+      "case": "injection",
+      "passed": true,
+      "ticketId": "4e9b48c2-84c1-454d-9066-2230e776004e",
+      "source": "ai-acceptance",
+      "status": "FORWARDED",
+      "team": "FINANCE",
+      "priority": "NORMAL",
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 1
+    }
+  ]
+}

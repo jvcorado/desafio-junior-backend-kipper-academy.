@@ -1,0 +1,8 @@
+name: kipper-support
+version: 1.0.0
+description: Recepção WhatsApp com identidade de transporte e triagem no Kanban Kipper
+provides_tools:
+  - register_support_ticket
+  - check_support_ticket
+provides_hooks:
+  - pre_llm_call

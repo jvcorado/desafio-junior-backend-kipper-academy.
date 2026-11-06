@@ -1,6 +1,6 @@
 # Triagem de suporte · Kipper Academy
 
-Backend Java para receber eventos de suporte, consultar políticas por ferramenta de IA, validar a triagem e criar GitHub Issues. Painel master com Kanban, filtros por equipe, gestão de políticas e revisão de conflitos.
+Backend Java para receber eventos de suporte, consultar políticas por ferramenta de IA, validar a triagem e encaminhar ao Kanban interno ou criar GitHub Issues. Painel master com filtros por equipe, gestão de políticas e revisão de conflitos.
 
 Implementação da `spec-triagem-suporte-kipper-v1.docx`, fornecida por JV, consolidada em 05/11/2026. Código desenvolvido com auxílio de IA (Codex). A aula exata a citar e o prazo da plataforma ainda precisam ser confirmados por João.
 
@@ -36,7 +36,7 @@ O revisor master libera conflito com **novos IDs de evento e de atendimento**, o
 
 ## PostgreSQL
 
-O schema e o catálogo são criados pelo Flyway. Há três migrações: entidades, políticas iniciais e ações humanas. H2 serve para execução local sem infraestrutura; os testes também são executáveis no PostgreSQL real.
+O schema e o catálogo são criados pelo Flyway. Há quatro migrações: entidades, políticas iniciais, ações humanas e confirmações do Kanban. H2 serve para execução local sem infraestrutura; os testes também são executáveis no PostgreSQL real.
 
 Para um PostgreSQL **local de desenvolvimento** via Docker:
 
@@ -50,11 +50,13 @@ export DATABASE_USER='triagem_java'
 
 Esse Compose cria uma instância local, não provisiona a VPS. Na Hostinger, usar banco e role próprios com privilégios restritos, sem abrir porta pública. Confira backup e restauração antes de guardar dados importantes. [Preparação da VPS](docs/infraestrutura.md).
 
-Na VPS de JV, o backend já está conectado a `triagem_java`: serviço privado em **127.0.0.1:18080**, Flyway V1–V3 aplicadas e três políticas iniciais verificadas. Acesso por túnel SSH em [localhost:18080](http://localhost:18080); IA e encaminhamento continuam em demonstração. [Estado e operação](docs/infraestrutura.md#backend-privado-na-vps--conectado-em-06112026).
+Na VPS de JV, o backend está conectado a `triagem_java`: serviço privado em **127.0.0.1:18080**, Flyway V1–V4 e três políticas. Acesso por túnel SSH em [localhost:18080](http://localhost:18080). IA real `gpt-6.1-sol` e encaminhamento ao Kanban interno foram validados com cinco cenários fictícios. [Evidência da IA real](docs/ia-real-verificacao.json) e [operação](docs/infraestrutura.md).
 
 O Spring lê as variáveis do processo; **não carrega `.env` automaticamente**. `.env.example` documenta os nomes. Nunca versione `.env`, chaves ou senhas. Um arquivo privado pode ser carregado pelo serviço/shell conforme o ambiente. A troca do H2 para PostgreSQL não copia dados existentes.
 
 ## IA e GitHub reais
+
+JV escolheu o **Kanban deste painel** para os testes integrados. `DELIVERY_MODE=panel` grava uma confirmação durável em `kanban_handoffs`, única por chamado, e fornece link para seu cartão. Reenvios consultam essa mesma confirmação. Esse encaminhamento é real dentro do painel; não representa uma issue GitHub nem resolução do problema.
 
 Configure `AI_MODE=http`, `AI_URL`, `AI_API_KEY` e `AI_MODEL` para um provedor que suporte o protocolo OpenAI Chat Completions com tool calling. `AI_URL` é a URL completa de `/v1/chat/completions`. O harness limita o ciclo a seis respostas (configurável de 1 a 12), aceita somente `consult_policy` e um argumento `category` enumerado, consulta o banco e devolve o resultado ao modelo. Depois exige proposta JSON, política consultada e versão, equipe coerente, suficiência e evidência literal. Dados do cliente ficam na mensagem de usuário, separados das instruções. Texto do modelo não executa SQL, terminal, edição de catálogo ou ações no GitHub.
 
@@ -62,13 +64,13 @@ Configure `DELIVERY_MODE=github`, `GITHUB_REPOSITORY=owner/repositorio-de-testes
 
 HTTP 201 com número e URL válidos confirma criação. Rejeição explícita 4xx (exceto 408) resulta em `DELIVERY_FAILED`; timeout, resposta inválida e 5xx resultam em `DELIVERY_UNKNOWN`. Cada tentativa começa persistida antes do HTTP. Um marcador com UUID interno correlaciona a issue. A reconciliação consulta issues abertas e fechadas, até 20 páginas de 100; ausência não prova falha e **não libera reenvio**. Somente rejeição explícita permite retry pelo mesmo adaptador. Resultado desconhecido permanece pendente até confirmação. Interrupção após início do envio deixa `SENDING`, também reconciliável.
 
-Os adaptadores HTTP têm testes de contrato com servidor local. **Uma chamada real à IA, uma conversa WhatsApp real e uma issue real ainda exigem configuração e evidência próprias.** Não há afirmação de demonstração externa concluída.
+Os adaptadores HTTP têm testes de contrato com servidor local. A chamada real à IA com `consult_policy` e a confirmação do Kanban foram verificadas na VPS. A conversa WhatsApp integrada ainda está em configuração; nenhuma issue GitHub foi criada nessa validação.
 
 ## Hermes
 
 Perfis dedicados `kipper-triagem` foram criados no Mac e no Hermes da VPS em 06/11/2026, sem clonar outros perfis. Não estão vinculados automaticamente a um número/grupo. [Instruções do perfil](integrations/hermes/SOUL.md) e [ponte MCP de entrada](integrations/hermes/mcp_server.py) estão versionadas. Leia [integração e limitações](docs/hermes.md) antes de ativar.
 
-A API do Hermes inspecionada executa o próprio ciclo de agente e não passa chamadas de ferramentas externas para o cliente Java. Por isso o adaptador HTTP Java requer um provedor com tool calling real; apontá-lo diretamente para essa rota do Hermes não comprova o requisito. Hermes recebe e coleta; o harness Java controla a classificação. Esta é uma escolha de implementação para manter os controles verificáveis, e a demonstração integrada ainda precisa ser validada.
+A rota HTTP genérica do Hermes executa seu próprio ciclo de agente. A integração implantada usa uma ponte privada diferente: `HttpAiModel` → worker fixo `CodexAuxiliaryClient` do Hermes → provedor real, preservando `tool_calls` e mensagens `tool`. O worker não executa ferramentas: o Java executa `consult_policy` e valida a proposta. As credenciais do provedor permanecem no Hermes. [Detalhes e estado do WhatsApp](docs/hermes.md).
 
 ## Arquitetura para explicar
 
@@ -77,7 +79,7 @@ Hermes / evento externo → ApiController → ReceptionService → Store / Postg
 Painel → TriageService → AgentHarness → AiModel (Demo ou HTTP)
                            ↓ consult_policy → Store
                            ↓ validação
-                       IssueGateway (Demo ou GitHub)
+                       IssueGateway (Demo, Kanban ou GitHub)
 ```
 
 É um monólito com injeção de dependências e portas/adaptadores. `TriageService` depende de `IssueGateway`, não de HTTP/GitHub. `AgentHarness` depende de `AiModel`, não do provedor. Trocar `DELIVERY_MODE` e `AI_MODE` troca a implementação injetada e conserva a regra. A suíte usa adapters substituídos sem reescrever a triagem. Isso demonstra inversão de dependência; não significa que toda a aplicação seja uma implementação estrita de Clean Architecture: os serviços usam Spring e o repositório JDBC é concreto. [Decisões e estados](docs/decisoes.md).

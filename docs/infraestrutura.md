@@ -27,7 +27,7 @@ Não há deploy público ou sincronização bidirecional com GitHub nesta implem
 
 ## Backend privado na VPS — conectado em 06/11/2026
 
-`kipper-triagem.service` está habilitado no boot e ativo em **127.0.0.1:18080**, com usuário transitório do systemd (`DynamicUser=yes`), heap máximo de 256 MiB e limite de memória de 512 MiB. O processo usa a role `triagem_java`; a senha continua somente na VPS. AI_MODE e DELIVERY_MODE permanecem `demo`, sem envios externos reais.
+`kipper-triagem.service` está habilitado no boot e ativo em **127.0.0.1:18080**, com usuário transitório do systemd (`DynamicUser=yes`), heap máximo de 256 MiB e limite de memória de 512 MiB. O processo usa a role `triagem_java`; a senha continua somente na VPS. Na primeira implantação, os modos eram `demo`; a ativação abaixo registra sua atualização.
 
 O Java não estava instalado no host. Foi instalado o runtime oficial Eclipse Temurin 21.0.13+9 em `/opt/kipper-triagem/temurin-21.0.13-9`, com checksum conferido a partir dos metadados da [Adoptium](https://adoptium.net/installation). Não foi alterado o Java global nem reiniciado serviço de outro projeto. O executável fica em uma release identificada por SHA-256 dentro de `/opt/kipper-triagem/releases`.
 
@@ -51,3 +51,15 @@ ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:18080:127.0.0.1:18080 deploy@SEU
 Então abra **http://localhost:18080**. Esse endereço acessa o backend da VPS conectado ao PostgreSQL. O quickstart local na porta 8080 continua sendo um ambiente separado, H2 por padrão; não há cópia automática de seus dados de demonstração para a VPS.
 
 Consultas de operação sem expor credenciais: `systemctl is-active kipper-triagem.service`, `systemctl is-enabled kipper-triagem.service` e `curl -fsS http://127.0.0.1:18080/api/policies`. Para investigar falhas, consulte o journal no host com acesso administrativo e preserve os segredos. Não imprima o ambiente do processo ou arquivos de credenciais.
+
+## Ativação da IA real e do Kanban — 06/11/2026
+
+`ops/activate_agent.py` atualizou o serviço existente com JAR SHA-256 `a6df99437b69b5141e80674d857c3aea3a716c00cb79911cef129ff2a679d2a6`. O backend confirmou `aiMode=http`, `deliveryMode=panel`; V4 acrescenta a confirmação única do Kanban. Antes da mudança, foi criado e reconhecido o dump privado `/var/backups/kipper-triagem/triagem_java-pre-agent-20261106T182827Z.dump`. Configuração do serviço e ambiente anterior também foram preservados em arquivos privados.
+
+`kipper-triagem-bridge.service` oferece inferência somente em **127.0.0.1:18082** e entrada de suporte na interface privada **172.16.6.1:18081**, aceitando apenas o IP existente do container Hermes e Bearer próprio. A entrada permite eventos `whatsapp-kipper`, consulta e processamento desses chamados; recusa políticas, conflitos, entrada master, retry e chamados de outras origens. Não existe publicação do painel nessa porta. Não desative a checagem de origem se a rede Docker mudar: revise os IPs e a configuração privada.
+
+O worker é um arquivo fixo, root-owned, executado no container como UID 10000; o corpo da requisição é JSON via stdin e não participa de shell/comando. A ponte aceita apenas `consult_policy`; somente o Java executa essa ferramenta. A autenticação do provedor não sai do Hermes. O serviço da ponte precisa do Docker para iniciar esse worker e, portanto, deve permanecer privado e com os arquivos sob controle administrativo.
+
+Cinco chamadas reais passaram com consulta nativa de política, validação Java e persistência PostgreSQL. Veja `ia-real-verificacao.json`. O caso insuficiente permaneceu em revisão, sem confirmação de encaminhamento.
+
+Para contingência da IA, ajuste somente `AI_MODE=demo` no arquivo privado de runtime e reinicie apenas `kipper-triagem.service`; mantenha a release atual e `DELIVERY_MODE=panel`. Isso preserva a migração aditiva e os registros do Kanban. Não execute `flyway clean`, não apague V4 e não publique arquivos de ambiente. Reverter a configuração do WhatsApp exige a cópia privada da configuração anterior e revisão da rota específica, preservando todas as outras rotas.
