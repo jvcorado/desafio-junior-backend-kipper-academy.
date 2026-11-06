@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--bundle',required=True,type=Path)
     parser.add_argument('--sha256',required=True)
     parser.add_argument('--chat',required=True)
+    parser.add_argument('--sender-session',help='Existing fictitious WhatsApp session in this group; pins its verified sender and outranks user-only routes')
     parser.add_argument('--apply',action='store_true')
     args=parser.parse_args()
     if hashlib.sha256(args.bundle.read_bytes()).hexdigest()!=args.sha256:raise SystemExit('Checksum mismatch')
@@ -41,6 +42,7 @@ def main():
         run(['docker','exec','--user','0',CONTAINER,'chmod','-R','a+rX,go-w','/tmp/kipper-profile-bundle'])
         secret=json.loads(Path('/etc/kipper-triagem/bridge.json').read_text())
         payload=dict(chat_id=args.chat,url='http://'+secret['gateway_ip']+':18081',key=secret['ingress_key'])
+        if args.sender_session:payload['sender_session']=args.sender_session
         result=run(['docker','exec','-i','--user','10000:10000','-e',
             'PYTHONPATH=/opt/hermes:/opt/hermes/.venv/lib/python3.14/site-packages',CONTAINER,
             '/opt/hermes/.venv/bin/python','/tmp/kipper-profile-bundle/configure_profile.py'],input=json.dumps(payload).encode(),timeout=90)

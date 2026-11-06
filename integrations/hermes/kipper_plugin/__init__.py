@@ -1,13 +1,13 @@
 """Transport-bound reception. The model cannot supply event ids or timestamps."""
 import hashlib
+import http.client
 import json
 import re
 import sqlite3
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 
 PROFILE = Path('/opt/data/profiles/kipper-triagem')
 STATE = PROFILE / 'kipper-support.sqlite'
@@ -69,14 +69,22 @@ def event_from_messages(args, origin, rows):
 
 def api(method, path, data=None):
     config = json.loads(SECRET.read_text())
+    target = urlparse(config['url'])
+    if target.scheme != 'http' or target.hostname != '172.16.6.1' or target.port != 18081:
+        raise ValueError('Destino privado da integração divergente; revisar configuração')
     body = json.dumps(data).encode() if data is not None else None
-    request = Request(config['url'] + path, data=body, method=method, headers={
-        'Authorization': 'Bearer ' + config['key'], 'Content-Type': 'application/json'})
+    connection = http.client.HTTPConnection(target.hostname, target.port, timeout=5)
     try:
-        with urlopen(request, timeout=350) as response:
-            return response.status, json.load(response)
-    except HTTPError as error:
-        return error.code, json.load(error)
+        connection.connect()
+        connection.sock.settimeout(350)
+        connection.request(method,path,body=body,headers={
+            'Authorization': 'Bearer ' + config['key'], 'Content-Type': 'application/json'})
+        response=connection.getresponse()
+        payload=response.read(1_000_001)
+        if len(payload)>1_000_000:raise ValueError('Resposta privada excedeu limite')
+        return response.status,json.loads(payload)
+    finally:
+        connection.close()
 
 
 def register_ticket(args, **kwargs):

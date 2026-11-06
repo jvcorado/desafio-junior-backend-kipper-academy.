@@ -1,8 +1,23 @@
 # Triagem de suporte · Kipper Academy
 
+[![Verificação automática](https://github.com/jvcorado/desafio-junior-backend-kipper-academy./actions/workflows/verify.yml/badge.svg)](https://github.com/jvcorado/desafio-junior-backend-kipper-academy./actions/workflows/verify.yml)
+
 Backend Java para receber eventos de suporte, consultar políticas por ferramenta de IA, validar a triagem e encaminhar ao Kanban interno ou criar GitHub Issues. Painel master com filtros por equipe, gestão de políticas e revisão de conflitos.
 
 Implementação da `spec-triagem-suporte-kipper-v1.docx`, fornecida por JV, consolidada em 05/11/2026. Código desenvolvido com auxílio de IA (Codex). A aula exata a citar e o prazo da plataforma ainda precisam ser confirmados por João.
+
+**Tecnologias:** Java 21, Spring Boot 3.5.7, Maven Wrapper, JDBC, Flyway, PostgreSQL e interface HTML/CSS/JavaScript sem etapa de build adicional.
+
+![Kanban com cinco chamados fictícios classificados pela IA real](docs/kanban-ia-real.jpg)
+
+## Estado da entrega
+
+- Backend ativo na VPS, com banco/usuário exclusivos e quatro migrações Flyway. O painel é privado e acessível por túnel SSH.
+- IA real e Kanban validados: cinco cenários fictícios, quatro encaminhamentos confirmados e um caso em revisão. Cada análise consultou a política por chamada nativa de ferramenta.
+- 27 testes Java aprovados em H2 e PostgreSQL e 12 testes Python aprovados; pipeline automático no GitHub.
+- WhatsApp: perfil e rota dedicados instalados, coleta de dados faltantes confirmada. **Persistência do fluxo WhatsApp → Kanban ainda em validação de conectividade privada.**
+
+O padrão local continua sendo a demonstração simulada, para reproduzir o projeto sem credenciais de IA ou acesso à VPS. Os modos utilizados aparecem no próprio painel. [Evidências e pendências](docs/validacao.md).
 
 ## Rodar em dois comandos
 
@@ -68,18 +83,28 @@ Os adaptadores HTTP têm testes de contrato com servidor local. A chamada real �
 
 ## Hermes
 
-Perfis dedicados `kipper-triagem` foram criados no Mac e no Hermes da VPS em 06/11/2026, sem clonar outros perfis. Não estão vinculados automaticamente a um número/grupo. [Instruções do perfil](integrations/hermes/SOUL.md) e [ponte MCP de entrada](integrations/hermes/mcp_server.py) estão versionadas. Leia [integração e limitações](docs/hermes.md) antes de ativar.
+Perfis dedicados `kipper-triagem` foram criados no Mac e no Hermes da VPS em 06/11/2026, sem clonar outros perfis. Na VPS, plugin nativo e rota restrita foram instalados no grupo de teste aprovado. A coleta de dados faltantes funcionou; a persistência no Kanban pelo WhatsApp ainda aguarda correção e teste da conexão privada. [Instruções do perfil](integrations/hermes/SOUL.md), [plugin nativo](integrations/hermes/kipper_plugin/__init__.py) e [alternativa MCP](integrations/hermes/mcp_server.py) estão versionados. Leia [integração e limitações](docs/hermes.md).
 
 A rota HTTP genérica do Hermes executa seu próprio ciclo de agente. A integração implantada usa uma ponte privada diferente: `HttpAiModel` → worker fixo `CodexAuxiliaryClient` do Hermes → provedor real, preservando `tool_calls` e mensagens `tool`. O worker não executa ferramentas: o Java executa `consult_policy` e valida a proposta. As credenciais do provedor permanecem no Hermes. [Detalhes e estado do WhatsApp](docs/hermes.md).
 
 ## Arquitetura para explicar
 
-```text
-Hermes / evento externo → ApiController → ReceptionService → Store / PostgreSQL
-Painel → TriageService → AgentHarness → AiModel (Demo ou HTTP)
-                           ↓ consult_policy → Store
-                           ↓ validação
-                       IssueGateway (Demo, Kanban ou GitHub)
+```mermaid
+flowchart LR
+    W[WhatsApp] --> H[Hermes: kipper-triagem]
+    H --> R[Recepção Java]
+    E[Evento HTTP] --> R
+    R --> D[(PostgreSQL)]
+    H --> T[TriageService]
+    P[Painel master] --> T
+    T --> A[Harness Java]
+    A <--> M[IA real ou demo]
+    A --> C[consult_policy]
+    C --> D
+    A --> V[Validação da proposta]
+    V --> G[IssueGateway]
+    G --> K[Kanban interno]
+    G --> GH[GitHub opcional]
 ```
 
 É um monólito com injeção de dependências e portas/adaptadores. `TriageService` depende de `IssueGateway`, não de HTTP/GitHub. `AgentHarness` depende de `AiModel`, não do provedor. Trocar `DELIVERY_MODE` e `AI_MODE` troca a implementação injetada e conserva a regra. A suíte usa adapters substituídos sem reescrever a triagem. Isso demonstra inversão de dependência; não significa que toda a aplicação seja uma implementação estrita de Clean Architecture: os serviços usam Spring e o repositório JDBC é concreto. [Decisões e estados](docs/decisoes.md).
@@ -97,6 +122,17 @@ TEST_DATABASE_USER=test TEST_DATABASE_PASSWORD=test ./mvnw test
 ```
 
 A suíte cobre validação, concorrência, idempotência, fila/liberação, classificação, ferramentas/propostas inválidas, limite de passos, catálogo histórico, confirmação/rejeição/incerteza e encerramento humano. CI repete em H2 e PostgreSQL. [Evidências e pendências de aceite](docs/validacao.md).
+
+Roteiro para a demonstração do desafio:
+
+1. Executar os dois comandos do início do README e abrir o painel.
+2. Cadastrar um cliente fictício com a mensagem “Fui cobrado duas vezes pela mesma compra”. O chamado nasce recebido; iniciar a triagem separadamente.
+3. Abrir os detalhes e mostrar Financeiro, prioridade normal, justificativa, versão da política, rastro `consult_policy` e confirmação do adaptador identificado no painel.
+4. Usar os eventos de `examples/` para demonstrar reentrega idêntica e payload conflitante, sem duplicação silenciosa.
+5. Demonstrar “não funciona”: revisão humana, sem prioridade inventada. Mostrar também indisponibilidade impeditiva e falha que permite continuar usando o produto.
+6. Explicar a troca de `AiModel` e `IssueGateway`, a separação entre recebimento/processamento e o encerramento exclusivamente humano.
+
+A execução local demonstra o comportamento com simuladores. A evidência separada em [ia-real-verificacao.json](docs/ia-real-verificacao.json) registra os cinco cenários efetivamente executados com provedor real na VPS.
 
 Para gerar o executável: `./mvnw package`, depois `java -jar target/triagem-suporte-1.0.0.jar`. Há Dockerfile opcional, ainda dependente de validação no ambiente de deploy; como a aplicação exige loopback, sua implantação em container precisa compartilhar uma rede privada apropriada/host Linux e não deve simplesmente publicar o painel na internet.
 

@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import shutil
 import signal
+import sqlite3
 import sys
 from datetime import datetime, timezone
 from urllib.request import urlopen
@@ -49,7 +50,14 @@ def main():
     before=hashlib.sha256(json.dumps(routes,sort_keys=True).encode()).hexdigest()
     if any(r.get('chat_id')==chat for r in routes):
         raise ValueError('Group already has a route: inspect before modifying')
-    routes.append(dict(name='kipper-triagem-test',platform='whatsapp',profile='kipper-triagem',chat_id=chat,bot_profile='default',enabled=True))
+    route=dict(name='kipper-triagem-test',platform='whatsapp',profile='kipper-triagem',chat_id=chat,bot_profile='default',enabled=True)
+    if data.get('sender_session'):
+        with sqlite3.connect('file:/opt/data/state.db?mode=ro',uri=True) as db:
+            sender=db.execute('SELECT user_id FROM sessions WHERE id=? AND chat_id=? AND source=?',
+                (data['sender_session'],chat,'whatsapp')).fetchone()
+        if not sender or not sender[0]:raise ValueError('Sender session must belong to this WhatsApp group')
+        route['user_id']=sender[0]
+    routes.append(route)
     # Add only this group; retain existing policy and every existing list entry.
     from dotenv import dotenv_values
     env=dotenv_values(home/'.env')
@@ -85,7 +93,7 @@ def main():
     pid=identity.get('pid')
     result=dict(configuredAt=datetime.now(timezone.utc).isoformat(),profile='kipper-triagem',
         groupName=metadata['name'],participants=2,routeCountBefore=len(routes)-1,routeCountAfter=len(routes),
-        previousRoutesDigest=before,existingRoutesPreserved=True,pluginReloaded=plugin_result.get('reloaded',False),
+        previousRoutesDigest=before,existingRoutesPreserved=True,senderRestricted='user_id' in route,pluginReloaded=plugin_result.get('reloaded',False),
         toolsets=allowed,backup=str(backup),gatewayRestartRequested=False)
     if isinstance(pid,int) and pid>1:
         os.kill(pid,signal.SIGUSR1)

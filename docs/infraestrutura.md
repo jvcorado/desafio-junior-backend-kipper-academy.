@@ -13,13 +13,13 @@ O plano cria `triagem_java`, role exclusiva sem privilégios administrativos/mem
 
 O script verifica login e produz dump inicial privado em `/var/backups/kipper-triagem`. **Dump inicial não comprova rotina de backup nem restauração.** Definir cobertura recorrente e testar recuperação antes de dados importantes. Compartilhar cluster significa compartilhar processo, volume e recursos; não é isolamento de infraestrutura.
 
-Em falha parcial, o arquivo privado impede execução cega/recriação/rotação. Inspecione o estado antes de corrigir; não remova o marcador só para repetir o script. Nenhum script altera firewall, configuração global de SSH ou permissões dos bancos existentes.
+Em falha parcial, o arquivo privado impede execução cega/recriação/rotação. Inspecione o estado antes de corrigir; não remova o marcador só para repetir o script. O provisionamento do banco não altera firewall, configuração global de SSH ou permissões dos bancos existentes.
 
-Executado na VPS em 06/11/2026 após aprovação explícita de JV. Banco e role `triagem_java` criados, login confirmado e isolamento conferido por consulta independente. Credencial e dump inicial privados (root:600); bancos existentes saudáveis. O dump foi reconhecido por `pg_restore --list`; restauração e cobertura recorrente ainda não foram verificadas. `banco-vps-verificacao.json` preserva o recibo histórico da criação do banco vazio. Posteriormente, o backend foi conectado e V1–V3 aplicadas: o estado atual está em `backend-vps-verificacao.json` e `validacao.md`.
+Executado na VPS em 06/11/2026 após aprovação explícita de JV. Banco e role `triagem_java` criados, login confirmado e isolamento conferido por consulta independente. Credencial e dump inicial privados (root:600); bancos existentes saudáveis. O dump foi reconhecido por `pg_restore --list`; restauração e cobertura recorrente ainda não foram verificadas. `banco-vps-verificacao.json` preserva o recibo histórico da criação do banco vazio. Posteriormente, o backend foi conectado e V1–V4 aplicadas: o estado atual está em `backend-vps-verificacao.json` e `validacao.md`.
 
 ## Execução da aplicação
 
-O app permanece em loopback. Carregue as variáveis privadas no processo Java; o usuário do serviço não precisa ler diretamente o arquivo root se o gerenciador de serviços o carregar. Para acesso remoto ao painel, use túnel SSH privado à porta 8080. Para um Java rodando no Mac acessar PostgreSQL remoto, use túnel à porta já existente do banco e configure `DATABASE_URL` com a porta local desse túnel.
+O app permanece em loopback. Carregue as variáveis privadas no processo Java; o usuário do serviço não precisa ler diretamente o arquivo root se o gerenciador de serviços o carregar. Para acesso remoto ao painel, use túnel SSH privado à porta configurada (18080 na VPS desta implantação). Para um Java rodando no Mac acessar PostgreSQL remoto, use túnel à porta já existente do banco e configure `DATABASE_URL` com a porta local desse túnel.
 
 O endpoint de entrada pode receber Bearer via proxy privado específico para `/api/events`. Não encaminhar `/api/manual-events`, políticas ou demais rotas administrativas para acesso público. Não apontar o app para bancos existentes de outros projetos: Flyway cria o schema da triagem no banco configurado.
 
@@ -63,3 +63,18 @@ O worker é um arquivo fixo, root-owned, executado no container como UID 10000; 
 Cinco chamadas reais passaram com consulta nativa de política, validação Java e persistência PostgreSQL. Veja `ia-real-verificacao.json`. O caso insuficiente permaneceu em revisão, sem confirmação de encaminhamento.
 
 Para contingência da IA, ajuste somente `AI_MODE=demo` no arquivo privado de runtime e reinicie apenas `kipper-triagem.service`; mantenha a release atual e `DELIVERY_MODE=panel`. Isso preserva a migração aditiva e os registros do Kanban. Não execute `flyway clean`, não apague V4 e não publique arquivos de ambiente. Reverter a configuração do WhatsApp exige a cópia privada da configuração anterior e revisão da rota específica, preservando todas as outras rotas.
+
+## Conectividade do WhatsApp — pendência identificada
+
+O diagnóstico no container confirmou timeout TCP para `172.16.6.1:18081`, com UFW ativo. O hook capturou as mensagens fictícias, mas nenhum chamado `whatsapp-kipper` foi persistido. A inferência e o Kanban pela API do backend continuam sendo evidências separadas desse transporte.
+
+`ops/configure_private_ingress.py` está preparado, mas **ainda não foi aplicado**. Por padrão, apenas imprime o plano. Com `--apply`, confere os IPs atuais do container e a configuração privada, exige UFW já ativo, preserva cópias privadas das regras e adiciona somente TCP de `172.16.6.2` para `172.16.6.1:18081`. Não habilita/desabilita UFW, não libera a porta para outras origens e não publica o painel. A aplicação aguarda a confirmação específica solicitada ao operador.
+
+```sh
+# Somente exibe o plano:
+python3 ops/configure_private_ingress.py
+# Após confirmação, no host pelo canal administrativo autorizado:
+python3 ops/configure_private_ingress.py --apply
+```
+
+Após aplicar, conferir conexão a partir do container e resposta autenticada da ponte; então repetir o chamado fictício no WhatsApp e verificar a confirmação no banco e no painel. Regra de firewall adicionada sem esse teste não comprova entrega. Se os IPs mudarem, o script recusa executar: revisar origem e destino, preservando o Bearer e o isolamento do painel.
