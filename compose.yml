@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: triagem_java
+      POSTGRES_USER: triagem_java
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Defina DATABASE_PASSWORD para o PostgreSQL local}
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - triagem-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triagem_java -d triagem_java"]
+      interval: 5s
+      retries: 10
+volumes:
+  triagem-data:

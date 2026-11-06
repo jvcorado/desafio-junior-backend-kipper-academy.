@@ -1,0 +1,10 @@
+{
+  "source": "whatsapp-test",
+  "eventId": "evt-demo-billing-001",
+  "ticketId": "support-demo-001",
+  "customerId": "fictional-customer-001",
+  "customerName": "Maria Exemplo",
+  "whatsapp": "+5511999999999",
+  "message": "O produto está indisponível e não consigo usar o produto.",
+  "occurredAt": "2026-11-05T15:00:00Z"
+}

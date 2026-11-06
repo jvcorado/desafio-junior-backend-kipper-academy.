@@ -1,0 +1,26 @@
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${PORT:8080}
+  error:
+    include-message: never
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:h2:file:./data/triagem;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
+    username: ${DATABASE_USER:sa}
+    password: ${DATABASE_PASSWORD:}
+  flyway:
+    enabled: true
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+triagem:
+  ai-mode: ${AI_MODE:demo}
+  delivery-mode: ${DELIVERY_MODE:demo}
+  ai-url: ${AI_URL:https://api.openai.com/v1/chat/completions}
+  ai-key: ${AI_API_KEY:}
+  ai-model: ${AI_MODEL:}
+  max-steps: ${AI_MAX_STEPS:6}
+  github-url: ${GITHUB_API_URL:https://api.github.com}
+  github-repository: ${GITHUB_REPOSITORY:}
+  github-token: ${GITHUB_TOKEN:}
+  webhook-token: ${WEBHOOK_TOKEN:}

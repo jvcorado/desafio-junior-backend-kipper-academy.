@@ -1,0 +1,11 @@
+/target/
+/.tools/
+/data/
+/.env
+/.env.*
+!/.env.example
+*.log
+.DS_Store
+.idea/
+*.iml
+__pycache__/

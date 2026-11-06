@@ -1,0 +1,10 @@
+{
+  "source": "whatsapp-test",
+  "eventId": "evt-demo-incomplete-001",
+  "ticketId": "support-demo-002",
+  "customerId": "fictional-customer-002",
+  "customerName": "João Exemplo",
+  "whatsapp": "+5511988888888",
+  "message": "não funciona",
+  "occurredAt": "2026-11-05T15:10:00Z"
+}
