@@ -4,7 +4,7 @@
   "ai": "Hermes CodexAuxiliaryClient / openai-codex / gpt-6.1-sol",
   "javaAiAdapter": "http",
   "deliveryAdapter": "panel",
-  "whatsappEndToEndVerified": false,
+  "whatsappEndToEndVerified": true,
   "cases": [
     {
       "case": "billing",
@@ -66,5 +66,6 @@
       "nativePolicyToolCalls": 1,
       "confirmedKanbanAttempts": 1
     }
-  ]
+  ],
+  "whatsappEvidence": "whatsapp-verificacao.json"
 }

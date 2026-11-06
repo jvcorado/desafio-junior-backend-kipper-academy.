@@ -15,7 +15,7 @@ Implementação da `spec-triagem-suporte-kipper-v1.docx`, fornecida por JV, cons
 - Backend ativo na VPS, com banco/usuário exclusivos e quatro migrações Flyway. O painel é privado e acessível por túnel SSH.
 - IA real e Kanban validados: cinco cenários fictícios, quatro encaminhamentos confirmados e um caso em revisão. Cada análise consultou a política por chamada nativa de ferramenta.
 - 27 testes Java aprovados em H2 e PostgreSQL e 12 testes Python aprovados; pipeline automático no GitHub.
-- WhatsApp: perfil e rota dedicados instalados, coleta de dados faltantes confirmada. **Persistência do fluxo WhatsApp → Kanban ainda em validação de conectividade privada.**
+- **WhatsApp → IA real → PostgreSQL → Kanban validado em 06/11/2026:** cobrança/Financeiro/normal, indisponibilidade/Técnico/alta e informação insuficiente/revisão. Coleta de dados faltantes e consulta sem duplicação confirmadas. [Relatório do canal real](docs/whatsapp-verificacao.json).
 
 O padrão local continua sendo a demonstração simulada, para reproduzir o projeto sem credenciais de IA ou acesso à VPS. Os modos utilizados aparecem no próprio painel. [Evidências e pendências](docs/validacao.md).
 
@@ -79,11 +79,11 @@ Configure `DELIVERY_MODE=github`, `GITHUB_REPOSITORY=owner/repositorio-de-testes
 
 HTTP 201 com número e URL válidos confirma criação. Rejeição explícita 4xx (exceto 408) resulta em `DELIVERY_FAILED`; timeout, resposta inválida e 5xx resultam em `DELIVERY_UNKNOWN`. Cada tentativa começa persistida antes do HTTP. Um marcador com UUID interno correlaciona a issue. A reconciliação consulta issues abertas e fechadas, até 20 páginas de 100; ausência não prova falha e **não libera reenvio**. Somente rejeição explícita permite retry pelo mesmo adaptador. Resultado desconhecido permanece pendente até confirmação. Interrupção após início do envio deixa `SENDING`, também reconciliável.
 
-Os adaptadores HTTP têm testes de contrato com servidor local. A chamada real à IA com `consult_policy` e a confirmação do Kanban foram verificadas na VPS. A conversa WhatsApp integrada ainda está em configuração; nenhuma issue GitHub foi criada nessa validação.
+Os adaptadores HTTP têm testes de contrato com servidor local. A chamada real à IA com `consult_policy` e a confirmação do Kanban foram verificadas na VPS. A conversa WhatsApp integrada também passou pelos três cenários registrados em [whatsapp-verificacao.json](docs/whatsapp-verificacao.json); nenhuma issue GitHub foi criada nessa validação.
 
 ## Hermes
 
-Perfis dedicados `kipper-triagem` foram criados no Mac e no Hermes da VPS em 06/11/2026, sem clonar outros perfis. Na VPS, plugin nativo e rota restrita foram instalados no grupo de teste aprovado. A coleta de dados faltantes funcionou; a persistência no Kanban pelo WhatsApp ainda aguarda correção e teste da conexão privada. [Instruções do perfil](integrations/hermes/SOUL.md), [plugin nativo](integrations/hermes/kipper_plugin/__init__.py) e [alternativa MCP](integrations/hermes/mcp_server.py) estão versionados. Leia [integração e limitações](docs/hermes.md).
+Perfis dedicados `kipper-triagem` foram criados no Mac e no Hermes da VPS em 06/11/2026, sem clonar outros perfis. Na VPS, plugin nativo e rota restrita foram instalados no grupo de teste aprovado. A coleta de dados faltantes, a persistência dos chamados e as respostas baseadas na confirmação do Kanban foram verificadas no canal real. [Instruções do perfil](integrations/hermes/SOUL.md), [plugin nativo](integrations/hermes/kipper_plugin/__init__.py) e [alternativa MCP](integrations/hermes/mcp_server.py) estão versionados. Leia [integração e limitações](docs/hermes.md).
 
 A rota HTTP genérica do Hermes executa seu próprio ciclo de agente. A integração implantada usa uma ponte privada diferente: `HttpAiModel` → worker fixo `CodexAuxiliaryClient` do Hermes → provedor real, preservando `tool_calls` e mensagens `tool`. O worker não executa ferramentas: o Java executa `consult_policy` e valida a proposta. As credenciais do provedor permanecem no Hermes. [Detalhes e estado do WhatsApp](docs/hermes.md).
 
@@ -132,7 +132,11 @@ Roteiro para a demonstração do desafio:
 5. Demonstrar “não funciona”: revisão humana, sem prioridade inventada. Mostrar também indisponibilidade impeditiva e falha que permite continuar usando o produto.
 6. Explicar a troca de `AiModel` e `IssueGateway`, a separação entre recebimento/processamento e o encerramento exclusivamente humano.
 
-A execução local demonstra o comportamento com simuladores. A evidência separada em [ia-real-verificacao.json](docs/ia-real-verificacao.json) registra os cinco cenários efetivamente executados com provedor real na VPS.
+A execução local demonstra o comportamento com simuladores. [ia-real-verificacao.json](docs/ia-real-verificacao.json) registra cinco cenários com provedor real pela API da VPS; [whatsapp-verificacao.json](docs/whatsapp-verificacao.json) registra três cenários adicionais pelo WhatsApp, com uma análise válida por chamado, duas confirmações do Kanban e uma revisão.
+
+![Chamado recebido no WhatsApp e salvo no Kanban](docs/whatsapp-kanban-confirmado.jpg)
+
+Para demonstrar o canal já conectado, use apenas o grupo de teste autorizado e dados fictícios. Envie uma cobrança sem nome/número, complete os campos solicitados e confira o cartão no painel privado. Depois consulte o mesmo chamado e mostre que a contagem não aumentou. Não há pareamento ou credenciais necessários para executar a demonstração local acima.
 
 Para gerar o executável: `./mvnw package`, depois `java -jar target/triagem-suporte-1.0.0.jar`. Há Dockerfile opcional, ainda dependente de validação no ambiente de deploy; como a aplicação exige loopback, sua implantação em container precisa compartilhar uma rede privada apropriada/host Linux e não deve simplesmente publicar o painel na internet.
 

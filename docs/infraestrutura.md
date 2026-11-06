@@ -64,11 +64,11 @@ Cinco chamadas reais passaram com consulta nativa de política, validação Java
 
 Para contingência da IA, ajuste somente `AI_MODE=demo` no arquivo privado de runtime e reinicie apenas `kipper-triagem.service`; mantenha a release atual e `DELIVERY_MODE=panel`. Isso preserva a migração aditiva e os registros do Kanban. Não execute `flyway clean`, não apague V4 e não publique arquivos de ambiente. Reverter a configuração do WhatsApp exige a cópia privada da configuração anterior e revisão da rota específica, preservando todas as outras rotas.
 
-## Conectividade do WhatsApp — pendência identificada
+## Conectividade do WhatsApp — corrigida em 06/11/2026
 
-O diagnóstico no container confirmou timeout TCP para `172.16.6.1:18081`, com UFW ativo. O hook capturou as mensagens fictícias, mas nenhum chamado `whatsapp-kipper` foi persistido. A inferência e o Kanban pela API do backend continuam sendo evidências separadas desse transporte.
+O diagnóstico inicial confirmou timeout TCP para `172.16.6.1:18081`, com UFW ativo. Após confirmação explícita de JV, a regra abaixo foi aplicada às 20h14 (America/Sao_Paulo). O container passou a conectar e a obter resposta autenticada da ponte. Em seguida, três chamados `whatsapp-kipper` passaram por IA real e PostgreSQL: duas confirmações de encaminhamento e uma revisão, registradas em `whatsapp-verificacao.json`.
 
-`ops/configure_private_ingress.py` está preparado, mas **ainda não foi aplicado**. Por padrão, apenas imprime o plano. Com `--apply`, confere os IPs atuais do container e a configuração privada, exige UFW já ativo, preserva cópias privadas das regras e adiciona somente TCP de `172.16.6.2` para `172.16.6.1:18081`. Não habilita/desabilita UFW, não libera a porta para outras origens e não publica o painel. A aplicação aguarda a confirmação específica solicitada ao operador.
+`ops/configure_private_ingress.py` foi executado com sucesso. Por padrão, apenas imprime o plano. Com `--apply`, confere os IPs atuais do container e a configuração privada, exige UFW já ativo, preserva cópias privadas das regras e adiciona somente TCP de `172.16.6.2` para `172.16.6.1:18081`. Não habilita/desabilita UFW, não libera a porta para outras origens e não publica o painel. Backup das regras em `/var/backups/kipper-triagem/ufw-pre-ingress-20261106T231408Z`; recibo privado em `/var/lib/kipper-triagem`. O script recusa repetir uma regra existente.
 
 ```sh
 # Somente exibe o plano:
@@ -77,4 +77,7 @@ python3 ops/configure_private_ingress.py
 python3 ops/configure_private_ingress.py --apply
 ```
 
-Após aplicar, conferir conexão a partir do container e resposta autenticada da ponte; então repetir o chamado fictício no WhatsApp e verificar a confirmação no banco e no painel. Regra de firewall adicionada sem esse teste não comprova entrega. Se os IPs mudarem, o script recusa executar: revisar origem e destino, preservando o Bearer e o isolamento do painel.
+A conexão a partir do container, a resposta autenticada, os registros do banco, os cartões no painel e as respostas no WhatsApp foram conferidos após aplicar. Em futuras alterações, repetir essas verificações; uma regra adicionada sozinha não comprova entrega. Se os IPs mudarem, o script recusa executar: revisar origem e destino, preservando o Bearer e o isolamento do painel.
+
+
+A revisão do cliente HTTP do plugin foi instalada por `ops/update_whatsapp_plugin.py`, com SHA-256 conferido e cópia privada anterior em `/var/backups/kipper-triagem`. Só o plugin foi substituído; a recarga preservou os demais perfis e os serviços existentes. Tanto o backend quanto a ponte permaneceram ativos; os containers PostgreSQL de PulsePay e Rachô foram conferidos saudáveis após a alteração.

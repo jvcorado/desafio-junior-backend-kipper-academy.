@@ -18,7 +18,9 @@ Responsável: Codex `/root`. Fonte de requisitos: spec DOCX v1 fornecida por JV 
 - **IA real na VPS:** cinco casos passaram com `gpt-6.1-sol`, chamada nativa `consult_policy`, snapshot da política, proposta válida e PostgreSQL. Cobrança → Financeiro/normal; indisponibilidade → Técnico/alta; lentidão sem impedimento → Técnico/normal; “não funciona” → revisão/sem prioridade; tentativa de mudar regras/estornar → Financeiro/normal, sem executar estorno. Quatro confirmações únicas do Kanban; nenhuma confirmação no caso insuficiente. [Relatório saneado](ia-real-verificacao.json).
 - Navegador ligado ao backend da VPS: quadro mostrou cinco chamados, quatro encaminhamentos e uma revisão; detalhe financeiro mostrou adaptador `http`, ferramenta real e tentativa `panel/CONFIRMED`. [Captura do painel](kanban-ia-real.jpg).
 - WhatsApp: grupo **Kipper · Triagem de teste**, somente JV e JAYV, criado após confirmação específica. Plugin nativo e rota instalados. A rota foi restringida ao grupo e ao remetente verificado, corrigindo precedência sobre uma rota anterior; as outras 21 rotas foram preservadas.
-- Canal real: a mensagem de cobrança fictícia sem cadastro fez o perfil solicitar nome e WhatsApp E.164. Após completar os campos fictícios, chamou `register_support_ticket`. O hook capturou as duas mensagens; o diagnóstico confirmou zero chamados persistidos dessa origem. Conexão TCP do container para a API privada expirou, com UFW ativo; a regra restrita está preparada e aguarda a confirmação solicitada. **Fluxo WhatsApp → Kanban ainda pendente.**
+- **Canal real concluído:** após autorização explícita de JV, regra UFW restrita aplicada às 20h14 (America/Sao_Paulo), com backup privado. TCP do container e requisição autenticada passaram. Plugin HTTP atualizado e recarregado; coleta dos campos ausentes já observada. A nova tentativa preservou a mensagem/horário originais e gerou exatamente um chamado financeiro.
+- **WhatsApp → IA real → PostgreSQL → Kanban:** três chamados fictícios, cada um com uma análise `http` válida e uma chamada nativa `consult_policy`. Maria/cobrança → Financeiro/normal/encaminhado, uma confirmação `panel/CONFIRMED`; Carla/indisponibilidade → Técnico/alta/encaminhado, uma confirmação; Bruno/“não funciona” → revisão, sem prioridade nem confirmação de encaminhamento. O bot consultou e respondeu com os estados reais. Reconsulta da Maria não gerou outro chamado. [Relatório saneado](whatsapp-verificacao.json), [cartão persistido](whatsapp-kanban-confirmado.jpg) e [conversa de teste](whatsapp-respostas.jpg).
+- Saúde após a alteração: `kipper-triagem.service` e `kipper-triagem-bridge.service` ativos; Hermes em execução; bancos PostgreSQL de PulsePay e Rachô saudáveis. Nenhum desses containers foi reiniciado para liberar a conexão.
 - Operação: a verificação SSH root autorizada retornou chave não aceita; nenhum novo acesso foi criado. Um diagnóstico MCP temporário, especificamente autorizado, recuperou o shell preso com SIGINT restrito. Foi removido em seguida; o painel confirmou ausência de servidores MCP. Gateway e container não foram reiniciados para essa recuperação.
 
 Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suíte foi repetida nos dois motores. Os testes HTTP usam servidor local, não substituem chamada real a um provedor ou GitHub.
@@ -27,7 +29,7 @@ Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suít
 
 | Critério | Evidência/estado |
 | --- | --- |
-| Validar nome, número e mensagem antes de persistir | Implementado e testado na API. Coleta de nome/número ausentes e captura do transporte observadas no WhatsApp; persistência pelo canal pendente. |
+| Validar nome, número e mensagem antes de persistir | Implementado e testado na API. Coleta de nome/número ausentes, captura do transporte e persistência confirmadas no WhatsApp. |
 | Recebimento separado da classificação | POST de evento salva RECEIVED; process inicia a etapa separada. |
 | Repetição idêntica sob concorrência | Teste em H2 e PostgreSQL: um chamado e um evento. |
 | Payload conflitante preservado e revisável | Testes de concorrência, deduplicação, liberação e vínculo de auditoria. |
@@ -38,17 +40,15 @@ Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suít
 | Sucesso/rejeição/resultado desconhecido | Contrato HTTP e fluxo persistido testados; não há confirmação falsa nem retry de desconhecido. |
 | Trocar integração sem trocar regra | Interfaces AiModel/IssueGateway; modos demo, Kanban e GitHub. Kanban real validado sem mudar o harness. |
 | Painel por equipe, políticas e conflitos | Implementado; principais fluxos exercitados no navegador. |
-| Evento WhatsApp real → IA real → destino confirmado | Destino alterado por JV para Kanban interno. IA/Java/banco/Kanban confirmados; **entrada WhatsApp ponta a ponta pendente**. |
+| Evento WhatsApp real → IA real → destino confirmado | **Aprovado em três cenários reais no WhatsApp**, com duas confirmações do Kanban e uma revisão; destino escolhido por JV. |
 | Banco na VPS | **Backend conectado e Flyway V1–V4 aplicadas**, com role exclusiva, serviço privado, catálogo e confirmações do Kanban. |
 | Backup/restauração operacional | Dumps inicial e pré-migração criados e legíveis por pg_restore; **rotina e restauração pendentes**. |
 | Aula, prazo, vídeo e acesso da mentora | **Pendentes de confirmação/entrega**. |
 
-## Próximos passos externos
+## Pendências para a entrega e operação contínua
 
-1. Definir rotina de backup e testar restauração do banco já conectado e migrado.
-2. Após a confirmação de rede solicitada, aplicar somente a regra privada e verificar a conexão autenticada do container; atualizar a revisão do cliente HTTP do plugin e recarregar o perfil.
-3. Repetir o chamado fictício pelo WhatsApp, conferir idempotência, cartão persistido e resposta baseada na confirmação; testar também mensagem insuficiente.
-4. Confirmar continuidade operacional das rotas existentes e registrar a evidência do transporte, sem publicar IDs pessoais ou credenciais.
-5. Registrar o cenário completo real, o caso insuficiente, a troca de adaptador e a explicação técnica; validar acesso privado da mentora e entrega na plataforma.
+1. Gravar o vídeo/demonstração, confirmar o título da aula e o prazo na plataforma.
+2. Validar o acesso privado da mentora ou usar a execução local reproduzível; enviar o repositório e o vídeo na plataforma.
+3. Definir rotina recorrente de backup e testar restauração em ambiente separado antes de dados importantes.
 
-Não há deploy público nem issue GitHub nessa validação. O backend está ativo na VPS com acesso privado, IA real e Kanban confirmados. O atendimento WhatsApp começou a funcionar no perfil correto, mas ainda não há prova de persistência ponta a ponta.
+O fluxo autorizado está operacional na VPS e foi validado até o Kanban. O painel continua privado, sem URL pública de administração. Nenhuma issue GitHub foi criada: JV escolheu o Kanban interno. O teste de reconsulta pelo canal comprova ausência de novo cadastro; os testes Java separados cobrem retransmissão idêntica e concorrência.

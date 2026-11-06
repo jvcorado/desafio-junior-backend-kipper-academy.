@@ -1,0 +1,47 @@
+{
+  "verifiedAt": "2026-11-06T23:18:56.833411+00:00",
+  "environment": "VPS / PostgreSQL triagem_java",
+  "channel": "WhatsApp / grupo de teste aprovado",
+  "whatsappEndToEndVerified": true,
+  "aiAdapter": "http",
+  "deliveryAdapter": "panel",
+  "missingDataCollectionObserved": true,
+  "originalMessagePreserved": true,
+  "readOnlyRecheckNoDuplicate": true,
+  "totalWhatsAppTickets": 3,
+  "cases": [
+    {
+      "customer": "Carla Exemplo",
+      "ticketId": "c31223f0-93df-4a08-971e-d9507d66cdae",
+      "source": "whatsapp-kipper",
+      "status": "FORWARDED",
+      "team": "TECHNICAL",
+      "priority": "HIGH",
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 1
+    },
+    {
+      "customer": "Bruno Exemplo",
+      "ticketId": "1cd1e43c-4e0c-4530-9c03-d188bf674c59",
+      "source": "whatsapp-kipper",
+      "status": "REVIEW",
+      "team": "REVIEW",
+      "priority": null,
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 0
+    },
+    {
+      "customer": "Maria Exemplo",
+      "ticketId": "5536a700-0676-4200-b4b6-d7c9ae01c062",
+      "source": "whatsapp-kipper",
+      "status": "FORWARDED",
+      "team": "FINANCE",
+      "priority": "NORMAL",
+      "analysisValid": true,
+      "nativePolicyToolCalls": 1,
+      "confirmedKanbanAttempts": 1
+    }
+  ]
+}
