@@ -1,4 +1,4 @@
-# Banco na VPS e acesso privado
+# Banco na VPS, backend privado e painel HTTPS
 
 O pedido atual inclui um banco próprio na VPS. O script revisável `ops/provision_database.py` implementa o plano para um cluster PostgreSQL existente, sem criar porta pública e sem modificar bancos de outros projetos.
 
@@ -19,11 +19,11 @@ Executado na VPS em 06/11/2026 após aprovação explícita de JV. Banco e role 
 
 ## Execução da aplicação
 
-O app permanece em loopback. Carregue as variáveis privadas no processo Java; o usuário do serviço não precisa ler diretamente o arquivo root se o gerenciador de serviços o carregar. Para acesso remoto ao painel, use túnel SSH privado à porta configurada (18080 na VPS desta implantação). Para um Java rodando no Mac acessar PostgreSQL remoto, use túnel à porta já existente do banco e configure `DATABASE_URL` com a porta local desse túnel.
+O app permanece em loopback. Carregue as variáveis privadas no processo Java; o usuário do serviço não precisa ler diretamente o arquivo root se o gerenciador de serviços o carregar. O acesso da mentora agora usa o proxy HTTPS autenticado em https://kipper.jayv.cloud; o túnel SSH à porta 18080 continua como alternativa administrativa. Para um Java rodando no Mac acessar PostgreSQL remoto, use túnel à porta já existente do banco e configure `DATABASE_URL` com a porta local desse túnel.
 
-O endpoint de entrada pode receber Bearer via proxy privado específico para `/api/events`. Não encaminhar `/api/manual-events`, políticas ou demais rotas administrativas para acesso público. Não apontar o app para bancos existentes de outros projetos: Flyway cria o schema da triagem no banco configurado.
+O endpoint de entrada pode receber Bearer via proxy privado específico para `/api/events`. Não encaminhar `/api/manual-events`, políticas ou demais rotas administrativas para acesso público sem autenticação; a publicação atual exige login no Traefik antes de qualquer rota do painel. Não apontar o app para bancos existentes de outros projetos: Flyway cria o schema da triagem no banco configurado.
 
-Não há deploy público ou sincronização bidirecional com GitHub nesta implementação. O Dockerfile é opcional e não foi executado no Docker local (daemon parado). O banco PostgreSQL usado na validação local é uma instância temporária separada, não o banco da VPS.
+O painel está publicado pelo proxy HTTPS com login descrito em `acesso-https.md`; o processo Java continua em loopback. Não há sincronização bidirecional com GitHub nesta implementação. O Dockerfile é opcional e não foi executado no Docker local (daemon parado). O banco PostgreSQL usado na validação local é uma instância temporária separada, não o banco da VPS.
 
 ## Backend privado na VPS — conectado em 06/11/2026
 
@@ -81,3 +81,12 @@ A conexão a partir do container, a resposta autenticada, os registros do banco,
 
 
 A revisão do cliente HTTP do plugin foi instalada por `ops/update_whatsapp_plugin.py`, com SHA-256 conferido e cópia privada anterior em `/var/backups/kipper-triagem`. Só o plugin foi substituído; a recarga preservou os demais perfis e os serviços existentes. Tanto o backend quanto a ponte permaneceram ativos; os containers PostgreSQL de PulsePay e Rachô foram conferidos saudáveis após a alteração.
+
+
+## Publicação HTTPS com login — 06/11/2026
+
+Após pedido e confirmação de JV, criado somente o registro `A kipper` no domínio existente `jayv.cloud`, para a VPS, TTL 300. Não houve compra de domínio, alteração de nameservers ou substituição dos demais registros. `kipper-panel-proxy` usa o Traefik host existente, resolver `letsencrypt`, login HTTP Basic com hash bcrypt de custo 12 e limite de requisições. O Nginx exclusivo escuta somente em 127.0.0.1:18083 e encaminha ao Java em 127.0.0.1:18080, sem abrir novas portas no firewall.
+
+Configuração SHA-256 `7bbe15c85a970a68ad50926764d8675f519216dd79d5a41fd5530b7b0d253c31`. Imagem instalada `nginx@sha256:583b7f2fce1cdb8da5ad5c39ebd3c33b98b87d493190e548bdee1fa8c619c311`. As credenciais escolhidas pelo operador são mantidas em arquivo privado, sem senha no repositório, saída ou argumentos dos comandos.
+
+`ops/publish_panel.py` é instalador de primeira publicação, com plano padrão e validação privada antes de aplicar. `ops/verify_public_panel.py` confirmou TLS, autenticação e limites do proxy; [relatório](https-verificacao.json). Para revogar a publicação, retire somente o container do proxy. O backend, a ponte do WhatsApp e o PostgreSQL continuam privados e independentes da rota pública.

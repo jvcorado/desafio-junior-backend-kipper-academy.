@@ -14,7 +14,7 @@ Escolhas feitas para materializar o pedido de implementação, distinguindo-as d
 | Encaminhamento | Porta IssueGateway, implementações Demo e GitHub. Equipe e prioridade no título/corpo; sem dependência de labels. |
 | Incerteza | SENDING antes do HTTP. Timeout/5xx/resposta inválida → DELIVERY_UNKNOWN. Consulta por marcador; ausência não permite retry. |
 | Painel | Quatro colunas: Novos; Revisão e pendências; Encaminhados; Concluídos. Estado detalhado permanece visível. |
-| Acesso | Apenas loopback, sem contas; acesso remoto por túnel privado. Proteção de origem, JSON em mutações e Bearer opcional no webhook. |
+| Acesso | Java em loopback; no modo local, sem contas. Na VPS, proxy HTTPS com login de avaliação e limite de requisições; túnel continua como opção administrativa. Origin validado antes de normalizar cabeçalhos; JSON nas mutações e Bearer privado do webhook preservados. |
 | Recuperação | PROCESSING com mais de 15 min pode voltar à revisão por decisão humana, com nota auditável. Nunca transforma envio pendente em falha. |
 
 ## Estados

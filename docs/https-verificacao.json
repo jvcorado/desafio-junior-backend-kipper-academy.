@@ -1,0 +1,27 @@
+{
+  "verifiedAt": "2026-11-06T23:39:51.476439+00:00",
+  "url": "https://kipper.jayv.cloud",
+  "tlsCertificateAndHostnameVerified": true,
+  "authentication": "HTTP Basic / dedicated evaluation account",
+  "checks": {
+    "anonymous:/": true,
+    "anonymous:/app.js": true,
+    "anonymous:/api/config": true,
+    "anonymous:/api/tickets": true,
+    "wrongPasswordRejected": true,
+    "authenticatedPanel": true,
+    "hsts": true,
+    "authenticatedAssets": true,
+    "realAiAndKanbanModes": true,
+    "authenticatedTicketRead": true,
+    "foreignOriginRejected": true,
+    "sameOriginReachesValidation": true,
+    "transportIngressStaysPrivate": true,
+    "httpRedirectsToHttps": true
+  },
+  "totalTickets": 9,
+  "whatsappTickets": 4,
+  "credentialsPrinted": false,
+  "passed": true,
+  "externalClientAuthenticatedHttpsVerified": true
+}

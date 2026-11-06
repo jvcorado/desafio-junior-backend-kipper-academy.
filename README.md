@@ -12,7 +12,9 @@ Implementação da `spec-triagem-suporte-kipper-v1.docx`, fornecida por JV, cons
 
 ## Estado da entrega
 
-- Backend ativo na VPS, com banco/usuário exclusivos e quatro migrações Flyway. O painel é privado e acessível por túnel SSH.
+**[Abrir painel online · kipper.jayv.cloud](https://kipper.jayv.cloud)** — HTTPS com login de avaliação, sem túnel SSH. Usuário e senha são fornecidos separadamente, fora do repositório. [Instruções de acesso](docs/acesso-https.md).
+
+- Backend ativo na VPS, com banco/usuário exclusivos e quatro migrações Flyway. O painel está publicado em HTTPS com autenticação obrigatória; o Java e o banco continuam em portas privadas.
 - IA real e Kanban validados: cinco cenários fictícios, quatro encaminhamentos confirmados e um caso em revisão. Cada análise consultou a política por chamada nativa de ferramenta.
 - 27 testes Java aprovados em H2 e PostgreSQL e 12 testes Python aprovados; pipeline automático no GitHub.
 - **WhatsApp → IA real → PostgreSQL → Kanban validado em 06/11/2026:** cobrança/Financeiro/normal, indisponibilidade/Técnico/alta e informação insuficiente/revisão. Coleta de dados faltantes e consulta sem duplicação confirmadas. [Relatório do canal real](docs/whatsapp-verificacao.json).
@@ -28,7 +30,7 @@ Requer **JDK 21**, internet na primeira instalação e shell compatível com o M
 ./mvnw spring-boot:run
 ```
 
-Abra [a central local](http://localhost:8080). O padrão é uma demonstração **com IA simulada e encaminhamento simulado**, claramente identificados no painel. Os dados persistem em `data/triagem.mv.db` (H2). Não há conta de usuário: o servidor aceita somente loopback. Para acesso da mentora, use um túnel privado ao servidor; não publique a edição sem proteção.
+Abra [a central local](http://localhost:8080). O padrão é uma demonstração **com IA simulada e encaminhamento simulado**, claramente identificados no painel. Os dados persistem em `data/triagem.mv.db` (H2). Nesse modo local não há conta de usuário: o servidor aceita somente loopback. A implantação da VPS acrescenta login no proxy HTTPS; a mentora pode usar o endereço online e as credenciais fornecidas separadamente.
 
 Crie um chamado fictício e clique **Iniciar triagem**. O recebimento e o processamento são etapas separadas; não há worker nem repetição automática. `FORWARDED` confirma o adaptador utilizado; na demonstração, não representa uma issue real. Somente o botão de encerramento humano leva a `CLOSED`.
 
@@ -65,7 +67,7 @@ export DATABASE_USER='triagem_java'
 
 Esse Compose cria uma instância local, não provisiona a VPS. Na Hostinger, usar banco e role próprios com privilégios restritos, sem abrir porta pública. Confira backup e restauração antes de guardar dados importantes. [Preparação da VPS](docs/infraestrutura.md).
 
-Na VPS de JV, o backend está conectado a `triagem_java`: serviço privado em **127.0.0.1:18080**, Flyway V1–V4 e três políticas. Acesso por túnel SSH em [localhost:18080](http://localhost:18080). IA real `gpt-6.1-sol` e encaminhamento ao Kanban interno foram validados com cinco cenários fictícios. [Evidência da IA real](docs/ia-real-verificacao.json) e [operação](docs/infraestrutura.md).
+Na VPS de JV, o backend está conectado a `triagem_java`: serviço privado em **127.0.0.1:18080**, Flyway V1–V4 e três políticas. Acesso online autenticado em [kipper.jayv.cloud](https://kipper.jayv.cloud); o túnel SSH em [localhost:18080](http://localhost:18080) continua como opção administrativa. IA real `gpt-6.1-sol` e encaminhamento ao Kanban interno foram validados com cinco cenários fictícios. [Evidência da IA real](docs/ia-real-verificacao.json) e [operação](docs/infraestrutura.md).
 
 O Spring lê as variáveis do processo; **não carrega `.env` automaticamente**. `.env.example` documenta os nomes. Nunca versione `.env`, chaves ou senhas. Um arquivo privado pode ser carregado pelo serviço/shell conforme o ambiente. A troca do H2 para PostgreSQL não copia dados existentes.
 
@@ -136,7 +138,7 @@ A execução local demonstra o comportamento com simuladores. [ia-real-verificac
 
 ![Chamado recebido no WhatsApp e salvo no Kanban](docs/whatsapp-kanban-confirmado.jpg)
 
-Para demonstrar o canal já conectado, use apenas o grupo de teste autorizado e dados fictícios. Envie uma cobrança sem nome/número, complete os campos solicitados e confira o cartão no painel privado. Depois consulte o mesmo chamado e mostre que a contagem não aumentou. Não há pareamento ou credenciais necessários para executar a demonstração local acima.
+Para demonstrar o canal já conectado, use apenas o grupo de teste autorizado e dados fictícios. Envie uma cobrança sem nome/número, complete os campos solicitados e confira o cartão no painel autenticado. Depois consulte o mesmo chamado e mostre que a contagem não aumentou. Não há pareamento ou credenciais necessários para executar a demonstração local acima.
 
 Para gerar o executável: `./mvnw package`, depois `java -jar target/triagem-suporte-1.0.0.jar`. Há Dockerfile opcional, ainda dependente de validação no ambiente de deploy; como a aplicação exige loopback, sua implantação em container precisa compartilhar uma rede privada apropriada/host Linux e não deve simplesmente publicar o painel na internet.
 

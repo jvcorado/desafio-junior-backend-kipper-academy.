@@ -25,6 +25,8 @@ Responsável: Codex `/root`. Fonte de requisitos: spec DOCX v1 fornecida por JV 
 
 Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suíte foi repetida nos dois motores. Os testes HTTP usam servidor local, não substituem chamada real a um provedor ou GitHub.
 
+- **HTTPS com login:** publicação em https://kipper.jayv.cloud confirmada em 06/11/2026 às 20h39. DNS e certificado/hostname verificados; 401 em página/assets/APIs sem login e para senha incorreta; 200 autenticado em painel/configuração/chamados; 403 para origem estrangeira e ingresso de transporte público. Evento master inválido retornou 400 sem criar registro. Serviços existentes permaneceram ativos. [Relatório do acesso](https-verificacao.json).
+
 ## Mapeamento do aceite
 
 | Critério | Evidência/estado |
@@ -41,6 +43,7 @@ Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suít
 | Trocar integração sem trocar regra | Interfaces AiModel/IssueGateway; modos demo, Kanban e GitHub. Kanban real validado sem mudar o harness. |
 | Painel por equipe, políticas e conflitos | Implementado; principais fluxos exercitados no navegador. |
 | Evento WhatsApp real → IA real → destino confirmado | **Aprovado em três cenários reais no WhatsApp**, com duas confirmações do Kanban e uma revisão; destino escolhido por JV. |
+| Acesso da mentora sem túnel | HTTPS com login obrigatório, instruções e credenciais entregues separadamente; verificação HTTP/TLS aprovada. |
 | Banco na VPS | **Backend conectado e Flyway V1–V4 aplicadas**, com role exclusiva, serviço privado, catálogo e confirmações do Kanban. |
 | Backup/restauração operacional | Dumps inicial e pré-migração criados e legíveis por pg_restore; **rotina e restauração pendentes**. |
 | Aula, prazo, vídeo e acesso da mentora | **Pendentes de confirmação/entrega**. |
@@ -48,7 +51,7 @@ Os testes de concorrência usam múltiplas threads contra o mesmo banco; a suít
 ## Pendências para a entrega e operação contínua
 
 1. Gravar o vídeo/demonstração, confirmar o título da aula e o prazo na plataforma.
-2. Validar o acesso privado da mentora ou usar a execução local reproduzível; enviar o repositório e o vídeo na plataforma.
+2. Compartilhar o endereço HTTPS e as credenciais diretamente com a mentora; enviar o repositório e o vídeo na plataforma.
 3. Definir rotina recorrente de backup e testar restauração em ambiente separado antes de dados importantes.
 
-O fluxo autorizado está operacional na VPS e foi validado até o Kanban. O painel continua privado, sem URL pública de administração. Nenhuma issue GitHub foi criada: JV escolheu o Kanban interno. O teste de reconsulta pelo canal comprova ausência de novo cadastro; os testes Java separados cobrem retransmissão idêntica e concorrência.
+O fluxo autorizado está operacional na VPS e foi validado até o Kanban. O painel tem URL pública HTTPS com autenticação obrigatória; backend e banco permanecem privados. Nenhuma issue GitHub foi criada: JV escolheu o Kanban interno. O teste de reconsulta pelo canal comprova ausência de novo cadastro; os testes Java separados cobrem retransmissão idêntica e concorrência.
